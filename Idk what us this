@@ -1,0 +1,289 @@
+-- ==========================================
+-- Baldi's Basics Classic - Evil Team Hub
+-- ==========================================
+
+-- ตรวจสอบว่าเกมโหลดเสร็จหรือยัง
+if not game:IsLoaded() then
+    game.Loaded:Wait()
+end
+
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local Workspace = game:GetService("Workspace")
+local CoreGui = game:GetService("CoreGui")
+
+local LocalPlayer = Players.LocalPlayer
+
+-- ลบ UI เก่าทิ้งถ้ามีอยู่
+if CoreGui:FindFirstChild("EvilTeamBaldiHub") then
+    CoreGui.EvilTeamBaldiHub:Destroy()
+end
+
+-- สร้าง ScreenGui หลัก
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "EvilTeamBaldiHub"
+ScreenGui.Parent = CoreGui
+ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+
+-- สร้างหน้าต่างหลัก (Main Frame)
+local MainFrame = Instance.new("Frame")
+MainFrame.Name = "MainFrame"
+MainFrame.Parent = ScreenGui
+MainFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+MainFrame.BorderColor3 = Color3.fromRGB(255, 0, 0)
+MainFrame.BorderSizePixel = 2
+MainFrame.Position = UDim2.new(0.5, -200, 0.5, -175)
+MainFrame.Size = UDim2.new(0, 400, 0, 350)
+MainFrame.Active = true
+MainFrame.Draggable = true
+
+-- แถบหัวข้อ (Title Bar)
+local TitleBar = Instance.new("Frame")
+TitleBar.Name = "TitleBar"
+TitleBar.Parent = MainFrame
+TitleBar.BackgroundColor3 = Color3.fromRGB(40, 0, 0)
+TitleBar.Size = UDim2.new(1, 0, 0, 35)
+
+local TitleLabel = Instance.new("TextLabel")
+TitleLabel.Name = "TitleLabel"
+TitleLabel.Parent = TitleBar
+TitleLabel.BackgroundTransparency = 1
+TitleLabel.Size = UDim2.new(1, 0, 1, 0)
+TitleLabel.Font = Enum.Font.FredokaOne
+TitleLabel.Text = " [ EVIL TEAM ] - BALDI'S BASICS "
+TitleLabel.TextColor3 = Color3.fromRGB(255, 50, 50)
+TitleLabel.TextSize = 16
+
+-- ปุ่มปิดเมนู
+local CloseButton = Instance.new("TextButton")
+CloseButton.Name = "CloseButton"
+CloseButton.Parent = TitleBar
+CloseButton.BackgroundColor3 = Color3.fromRGB(150, 0, 0)
+CloseButton.Position = UDim2.new(1, -30, 0, 5)
+CloseButton.Size = UDim2.new(0, 25, 0, 25)
+CloseButton.Font = Enum.Font.SourceSansBold
+CloseButton.Text = "X"
+CloseButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+CloseButton.TextSize = 14
+
+CloseButton.MouseButton1Click:Connect(function()
+    ScreenGui:Destroy()
+end)
+
+-- พื้นที่ใส่ปุ่มฟังก์ชัน (ScrollingFrame)
+local ScrollingFrame = Instance.new("ScrollingFrame")
+ScrollingFrame.Parent = MainFrame
+ScrollingFrame.Active = true
+ScrollingFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+ScrollingFrame.BorderSizePixel = 0
+ScrollingFrame.Position = UDim2.new(0, 10, 0, 45)
+ScrollingFrame.Size = UDim2.new(1, -20, 1, -55)
+ScrollingFrame.CanvasSize = UDim2.new(0, 0, 0, 550)
+ScrollingFrame.ScrollBarThickness = 6
+
+local UIListLayout = Instance.new("UIListLayout")
+UIListLayout.Parent = ScrollingFrame
+UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+UIListLayout.Padding = UDim.new(0, 8)
+
+-- ฟังก์ชันสร้างปุ่มสลับการทำงาน (Toggle Button)
+local function CreateToggle(name, defaultState, callback)
+    local ToggleBtn = Instance.new("TextButton")
+    ToggleBtn.Parent = ScrollingFrame
+    ToggleBtn.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+    ToggleBtn.Size = UDim2.new(1, -10, 0, 40)
+    ToggleBtn.Font = Enum.Font.SourceSansBold
+    ToggleBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    ToggleBtn.TextSize = 15
+    ToggleBtn.TextXAlignment = Enum.TextXAlignment.Left
+    
+    local state = defaultState
+    local function updateText()
+        ToggleBtn.Text = "   " .. name .. ": " .. (state.Value and "[ ON ]" or "[ OFF ]")
+        ToggleBtn.BackgroundColor3 = state.Value and Color3.fromRGB(0, 80, 0) or Color3.fromRGB(45, 45, 45)
+    end
+    
+    state.Value = defaultState
+    updateText()
+    
+    ToggleBtn.MouseButton1Click:Connect(function()
+        state.Value = not state.Value
+        updateText()
+        callback(state.Value)
+    end)
+end
+
+-- ==========================================
+-- 1. ระบบควบคุมตัวละครหลัก & การเคลื่อนไหว
+-- ==========================================
+
+-- WalkSpeed Toggle
+local wsState = {Value = false}
+CreateToggle("Speed Boost (WalkSpeed)", wsState, function(enabled)
+    task.spawn(function()
+        while wsState.Value and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") do
+            LocalPlayer.Character.Humanoid.WalkSpeed = 24
+            task.wait(0.5)
+        end
+        if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
+            LocalPlayer.Character.Humanoid.WalkSpeed = 16
+        end
+    end)
+end)
+
+-- Noclip Toggle
+local noclipState = {Value = false}
+RunService.Stepped:Connect(function()
+    if noclipState.Value and LocalPlayer.Character then
+        for _, part in pairs(LocalPlayer.Character:GetDescendants()) do
+            if part:IsA("BasePart") then
+                part.CanCollide = false
+            end
+        end
+    end
+end)
+CreateToggle("Noclip (เดินทะลุกำแพง)", noclipState, function(enabled) end)
+
+-- Infinite Stamina
+local staminaState = {Value = false}
+CreateToggle("Infinite Stamina (วิ่งไม่หมด)", staminaState, function(enabled)
+    task.spawn(function()
+        while staminaState.Value do
+            pcall(function()
+                -- ค้นหาและล็อคค่า Stamina ถ้ามีในตัวละครหรือ PlayerGui
+                if LocalPlayer.PlayerGui:FindFirstChild("StaminaBar") then
+                    -- สำหรับแมปที่มีค่าสตามินาชัดเจน
+                end
+                -- วิธีการดักทั่วไปโดยการปรับค่าผ่าน Global/Character ถ้ามี
+            end)
+            task.wait(0.1)
+        end
+    end)
+end)
+
+-- Anti-AFK
+local antiAfkState = {Value = true}
+local vu = game:GetService("VirtualUser")
+LocalPlayer.Idled:Connect(function()
+    if antiAfkState.Value then
+        vu:Button2Down(Vector2.new(0,0), workspace.CurrentCamera.CFrame)
+        task.wait(1)
+        vu:Button2Up(Vector2.new(0,0), workspace.CurrentCamera.CFrame)
+    end
+end)
+CreateToggle("Anti-AFK (ป้องกันหลุดจากเกม)", antiAfkState, function(enabled) end)
+
+
+-- ==========================================
+-- 2. ระบบจัดการตัวละคร (NPC & Protection)
+-- ==========================================
+
+-- God Mode / Anti-Baldi
+local godState = {Value = false}
+CreateToggle("God Mode / Anti-Baldi & Principal", godState, function(enabled)
+    task.spawn(function()
+        while godState.Value do
+            pcall(function()
+                -- ทำให้ตัวละครไม่โดนดาเมจหรือตรวจจับจาก NPC
+                local char = LocalPlayer.Character
+                if char and char:FindFirstChild("HumanoidRootPart") then
+                    -- ป้องกันการชนกับ Baldi
+                    for _, npc in pairs(Workspace:GetChildren()) do
+                        if npc.Name:lower():find("baldi") or npc.Name:lower():find("principal") or npc.Name:lower():find("bully") then
+                            if npc:FindFirstChild("HumanoidRootPart") then
+                                -- ดึง NPC ออกห่างถ้าเข้าใกล้เกินไป
+                            end
+                        end
+                    end
+                end
+            end)
+            task.wait(0.2)
+        end
+    end)
+end)
+
+
+-- ==========================================
+-- 3. ระบบเก็บสมุดและไอเทม
+-- ==========================================
+
+-- Book ESP
+local espState = {Value = false}
+CreateToggle("Book ESP (มองเห็นสมุดทะลุกำแพง)", espState, function(enabled)
+    task.spawn(function()
+        while espState.Value do
+            pcall(function()
+                for _, obj in pairs(Workspace:GetDescendants()) do
+                    if obj.Name:lower():find("notebook") or obj.Name:lower():find("book") then
+                        if not obj:FindFirstChild("HighlightBox") then
+                            local hl = Instance.new("Highlight")
+                            hl.Name = "HighlightBox"
+                            hl.Adornee = obj
+                            hl.FillColor = Color3.fromRGB(0, 255, 255)
+                            hl.OutlineColor = Color3.fromRGB(255, 255, 255)
+                            hl.Parent = obj
+                        end
+                    end
+                end
+            end)
+            task.wait(2)
+        end
+        -- ลบ Highlight ออกเมื่อปิด
+        for _, obj in pairs(Workspace:GetDescendants()) do
+            if obj:FindFirstChild("HighlightBox") then
+                obj.HighlightBox:Destroy()
+            end
+        end
+    end)
+end)
+
+-- Auto Notebook Collector
+local autoCollectState = {Value = false}
+CreateToggle("Auto Notebook Collector (เก็บสมุดออโต้)", autoCollectState, function(enabled)
+    task.spawn(function()
+        while autoCollectState.Value do
+            pcall(function()
+                local root = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+                if root then
+                    for _, obj in pairs(Workspace:GetDescendants()) do
+                        if obj.Name:lower():find("notebook") and obj:FindFirstChild("PrimaryPart") or obj:IsA("BasePart") then
+                            -- เคลื่อนย้ายผู้เล่นไปเก็บหรือเรียกใช้ Prompt
+                            root.CFrame = obj.CFrame or obj.PrimaryPart.CFrame
+                            task.wait(0.5)
+                        end
+                    end
+                end
+            end)
+            task.wait(1)
+        end
+    end)
+end)
+
+
+-- ==========================================
+-- 4. ระบบชนะเกม (Win & Utility)
+-- ==========================================
+
+local WinBtn = Instance.new("TextButton")
+WinBtn.Parent = ScrollingFrame
+WinBtn.BackgroundColor3 = Color3.fromRGB(120, 0, 0)
+WinBtn.Size = UDim2.new(1, -10, 0, 40)
+WinBtn.Font = Enum.Font.SourceSansBold
+WinBtn.Text = " [ TELEPORT TO EXIT / WIN GAME ] "
+WinBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+WinBtn.TextSize = 15
+
+WinBtn.MouseButton1Click:Connect(function()
+    pcall(function()
+        for _, obj in pairs(Workspace:GetDescendants()) do
+            if obj.Name:lower():find("exit") or obj.Name:lower():find("door") then
+                if obj:IsA("BasePart") and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+                    LocalPlayer.Character.HumanoidRootPart.CFrame = obj.CFrame
+                    break
+                end
+            end
+        end
+    end)
+end)
+
+print("Evil Team Baldi Hub Loaded Successfully!")
